@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создание заявки</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+    <div class="container">
+        <a class="navbar-brand" href="cabinet.html">🏛 Система бронирования</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="mainNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="cabinet.html">Личный кабинет</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="create-application.html">Создать заявку</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container py-5" style="max-width: 720px;">
+
+    <h2 class="mb-4 text-center">Формирование заявки</h2>
+
+    <div id="alertSuccess" class="alert alert-success d-none" role="alert">
+        ✅ Заявка успешно отправлена администратору!
+    </div>
+
+    <div class="card form-card">
+        <div class="card-header">
+            Новая заявка на конференцию
+        </div>
+        <div class="card-body p-4">
+
+            <form id="applicationForm" novalidate>
+
+                <div class="mb-3">
+                    <label for="room" class="form-label">Помещение <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="room" name="room"
+                           minlength="3" required
+                           placeholder="Например: Конференц-зал «Альфа»">
+                    <div class="invalid-feedback">
+                        Укажите название помещения (минимум 3 символа).
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="date" class="form-label">Дата начала конференции <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="date" name="date"
+                           placeholder="ДД.ММ.ГГГГ"
+                           pattern="^\d{2}\.\d{2}\.\d{4}$" required>
+                    <div class="form-text">Формат: ДД.ММ.ГГГГ (например, 15.10.2025)</div>
+                    <div class="invalid-feedback">
+                        Введите дату в формате ДД.ММ.ГГГГ.
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label d-block">Способ оплаты <span class="text-danger">*</span></label>
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="payment"
+                               id="paymentInPerson" value="Очное посещение" required>
+                        <label class="form-check-label" for="paymentInPerson">
+                            Очное посещение
+                        </label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="payment"
+                               id="paymentSBP" value="СБП">
+                        <label class="form-check-label" for="paymentSBP">
+                            Перевод по системе СБП
+                        </label>
+                    </div>
+                    <div class="invalid-feedback d-block" id="paymentError"></div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary flex-grow-1">
+                        Отправить
+                    </button>
+                    <a href="cabinet.html" class="btn btn-outline-secondary flex-grow-1">
+                        Мои заявки
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
