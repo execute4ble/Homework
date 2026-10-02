@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title><%= title %></title>
+</head>
+<body>
+    <h1><%= title %></h1>
+    <p>Добро пожаловать, <b><%= user.fio %></b>!</p>
+
+    <h3>Список ваших заявок:</h3>
+    <table border="1" cellpadding="5" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Помещение</th>
+                <th>Статус</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% requests.forEach(function(room) { %>
+                <tr>
+                    <td><%= room.room_name %></td>
+                    <td><%= room.status %></td>
+                </tr>
+            <% }); %>
+        </tbody>
+    </table>
+    <br>
+    <a href="/">На главную</a>
+</body>
+</html>

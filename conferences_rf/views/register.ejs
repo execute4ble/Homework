@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Регистрация</title>
+</head>
+<body>
+    <h2>Регистрация на портале</h2>
+    <form method="POST" action="/register">
+        <p><input name="login" placeholder="Логин" required></p>
+        <p><input name="password" type="password" placeholder="Пароль" required></p>
+        <p><input name="fio" placeholder="ФИО" required></p>
+        <p><input name="phone" type="tel" placeholder="Телефон" required></p>
+        <p><input name="email" type="email" placeholder="Email" required></p>
+        <p><input name="city" type="city" placeholder="Город" required></p>
+        <button type="submit">Создать пользователя</button>
+        <button type="reset">Очистить форму</button>
+    </form>
+
+    <% if (typeof user !== 'undefined') { %>
+        <h3>Вы успешно зарегистрированы!</h3>
+        <p><b>Логин:</b> <%= user.login %></p>
+        <p><b>ФИО:</b> <%= user.fio %></p>
+        <p><b>Телефон:</b> <%= user.phone %></p>
+        <p><b>Email:</b> <%= user.email %></p>
+        <p><b>Город:</b> <%= user.city %></p>
+    <% } %>
+    <br>
+    <a href="/">На главную</a>
+</body>
+</html>
