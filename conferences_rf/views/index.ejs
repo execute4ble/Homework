@@ -1,17 +1,4 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>Главная страница</title>
-</head>
-<body>
+<%- include('header', { title: 'MainPage' }) %>
     <h1>Добро пожаловать на Конференции.РФ</h1>
-    <p>Выберите нужный раздел в меню:</p>
-    <ul>
-        <li><a href="/about">О портале</a></li>
-        <li><a href="/register">Регистрация</a></li>
-        <li><a href="/login">Вход</a></li>
-        <li><a href="/dashboard">Панель управления</a></li>
-    </ul>
-</body>
-</html>
+    <p>Хорошего настроения</p>
+<%- include('footer') %>

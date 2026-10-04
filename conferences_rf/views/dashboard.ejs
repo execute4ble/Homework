@@ -1,10 +1,4 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title><%= title %></title>
-</head>
-<body>
+<%- include('header') %>
     <h1><%= title %></h1>
     <p>Добро пожаловать, <b><%= user.fio %></b>!</p>
 
@@ -25,7 +19,4 @@
             <% }); %>
         </tbody>
     </table>
-    <br>
-    <a href="/">На главную</a>
-</body>
-</html>
+<%- include('footer') %>

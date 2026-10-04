@@ -94,13 +94,20 @@
 //     console.log(`Сервер запущен: http://localhost:${PORT}`);
 // });
 import express from "express";
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = 3000;
 
-app.set('view engine', 'ejs');
+app.use(express.static('public'))
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/", (req, res) => {
+app.set('view engine', 'ejs');
+app.set('views', join(__dirname, 'views'));
+
+app.get("/index", (req, res) => {
     res.render('index');
 });
 
