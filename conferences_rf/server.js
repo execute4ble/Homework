@@ -94,59 +94,74 @@
 //     console.log(`Сервер запущен: http://localhost:${PORT}`);
 // });
 import express from "express";
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+import db from "./db.js";
+import { User } from "./db.js";
 
+const users = db.prepare("SELECT * FROM users").all();
+const rooms = db.prepare("SELECT * FROM rooms").all();
+const requests = db.prepare("SELECT * FROM requests").all();
+const userModel = new User(); 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = 3000;
 
-app.use(express.static('public'))
+app.use(express.static("public"));
 app.use(express.urlencoded({ extended: true }));
 
-app.set('view engine', 'ejs');
-app.set('views', join(__dirname, 'views'));
+app.set("view engine", "ejs");
+app.set("views", join(__dirname, "views"));
 
 app.get("/index", (req, res) => {
-    res.render('index');
+  res.render("index");
 });
 
-app.get('/about', (req, res) => {
-    res.render('about', {
-        title: 'О портале Конференции.РФ',
-        description: 'Это современный образовательный и научный портал для проведения мероприятий.'
-    });
+app.get("/about", (req, res) => {
+  res.render("about", {
+    title: "О портале Конференции.РФ",
+    description:
+      "Это современный образовательный и научный портал для проведения мероприятий.",
+  });
 });
 
-app.get('/register', (req, res) => {
-    res.render('register');
+app.get("/register", (req, res) => {
+  res.render("register");
 });
 
-app.post('/register', (req, res) => {
-    const { login, password, fio, phone, email, city } = req.body;
-    res.render('register', { user: { login, fio, phone, email, city } });
+app.post("/register", (req, res) => {
+  const { login, password, fio, phone, email, city } = req.body;
+  res.render("register", { user: { login, fio, phone, email, city } });
 });
 
-app.get('/login', (req, res) => {
-    res.render('login');
+app.get("/login", (req, res) => {
+  res.render("login");
 });
 
-app.post('/login', (req, res) => {
-    res.redirect('/dashboard');
+app.post("/login", (req, res) => {
+  res.redirect("/dashboard");
 });
 
-app.get('/dashboard', (req, res) => {
-    res.render('dashboard', {
-        title: 'Мои заявки',
-        user: { fio: 'Иванов Иван' },
-        requests: [
-            { room_name: 'Аудитория №1', status: 'Новая' },
-            { room_name: 'Коворкинг', status: 'Завершено' }
-        ]
-    });
+app.get("/dashboard", (req, res) => {
+  res.render("dashboard", {
+    title: "Мои заявки",
+    user: { fio: "Иванов Иван" },
+    requests: [
+      { room_name: "Аудитория №1", status: "Новая" },
+      { room_name: "Коворкинг", status: "Завершено" },
+    ],
+  });
 });
 
 app.listen(PORT, () => {
-    console.log(`Сервер запущен: http://localhost:${PORT}`);
+  console.log(`Сервер запущен: http://localhost:${PORT}`);
 });
 
+console.log(users);
+console.log(rooms);
+console.log(requests);
+
+console.log("Все пользователи:", userModel.findAll());
+console.log("Всего пользователей:", userModel.count());
+console.log("Существует ли ivan?:", userModel.exists("ivan"));
+console.log("Существует ли programmer?:", userModel.exists("programmer"));
