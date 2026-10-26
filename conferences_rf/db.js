@@ -1,9 +1,11 @@
 import Database from "better-sqlite3";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import bcrypt from "bcryptjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const db = new Database(join(__dirname, "conf.db"));
+const hash = (pwd) => bcrypt.hashSync(pwd, 10);
 
 db.exec(`
     CREATE TABLE IF NOT EXISTS users(
@@ -55,26 +57,33 @@ if (count === 0) {
         `);
   stat.run(
     "ivan",
-    "demo",
+    hash("demo"),
     "Иванов Иван",
     "8(999)123-45-67",
     "ivanov@example.com",
   );
   stat.run(
     "dima",
-    "demo",
+    hash("demo"),
     "Дмитрий Евгенич",
     "8(999)123-45-67",
     "krug@example.com",
   );
   stat.run(
     "miha",
-    "demo",
+    hash("demo"),
     "Михаил Круг",
     "8(999)123-45-67",
     "evgenich@example.com",
   );
-  console.log("Тестовый пользователи добавлены");
+
+  stat.run(
+    "Conf2027",
+    hash("Demo77"),
+    "Администратор",
+    "8(999)000-00-00",
+    "admin@conf.ru",
+  );
 }
 
 if (rooms === 0) {
@@ -88,18 +97,18 @@ if (rooms === 0) {
   console.log("Тестовые комнаты добавлены");
 }
 
-if (requests === 0){
+if (requests === 0) {
   const statRequest = db.prepare(`
       INSERT INTO requests(user_id, room_id, date_start, payment)
       VALUES(?, ?, ?, ?)
-    ` );
-    statRequest.run(1, 1, "2027-03-15", "При очном посещении");
-    statRequest.run(1, 2, "2027-03-20", "Перевод по СБП");
-    statRequest.run(1, 3, "2027-04-01", "При очном посещении");
-    console.log("Тестовые заявки добавлены");
-};
+    `);
+  statRequest.run(1, 1, "2027-03-15", "При очном посещении");
+  statRequest.run(1, 2, "2027-03-20", "Перевод по СБП");
+  statRequest.run(1, 3, "2027-04-01", "При очном посещении");
+  console.log("Тестовые заявки добавлены");
+}
 
-class User {
+class UserModel {
   constructor() {
     this.table = "users";
   }
@@ -122,10 +131,104 @@ class User {
 
   exists(login) {
     const user = this.findByLogin(login);
-    return !!user; 
-}
+    return !!user;
+  }
+
+  create({ login, password, fio, phone, email }) {
+    const hash = bcrypt.hashSync(password, 10);
+    const r = db
+      .prepare(
+        `
+      INSERT INTO ${this.table} (login, password, fio, phone, email)
+      VALUES(?, ?, ?, ?, ?)
+      `,
+      )
+      .run(login, hash, fio, phone, email);
+    return this.findById(r.lastInsertRowid);
+  }
 }
 
-export { User }
+class RoomModel {
+  constructor() {
+    this.table = "rooms";
+  }
+  findAll() {
+    return db.prepare(`SELECT * FROM ${this.table}`).all();
+  }
+
+  findById(id) {
+    return db.prepare(`SELECT * FROM ${this.table} WHERE id = ?`).get(id);
+  }
+
+  findByType(type) {
+    return db.prepare(`SELECT * FROM ${this.table} WHERE type = ?`).all(type);
+  }
+  count() {
+    return db.prepare(`SELECT COUNT(*) AS c FROM ${this.table}`).get().c;
+  }
+}
+
+class RequestsModel {
+  constructor() {
+    this.table = "requests";
+  }
+  findById(id) {
+    return db.prepare(`SELECT * FROM ${this.table} WHERE id = ?`).get(id);
+  }
+  count() {
+    return db.prepare(`SELECT COUNT(*) AS c FROM ${this.table}`).get().c;
+  }
+  findByUser(userId) {
+    return db
+      .prepare(
+        `
+    SELECT r.*, rm.name AS room_name, rm.type AS room_type
+    FROM ${this.table} r
+    JOIN rooms rm ON rm.id = r.room_id
+    WHERE r.user_id = ?
+    ORDER BY r.id DESC
+  `,
+      )
+      .all(userId);
+  }
+  findAllDetailed() {
+    return db
+      .prepare(
+        `
+    SELECT r.*, u.fio, u.login, rm.name AS room_name, rm.type AS room_type 
+    FROM ${this.table} r
+    JOIN users u ON u.id = r.user_id
+    JOIN rooms rm ON rm.id = r.room_id
+    ORDER BY r.id DESC
+  `,
+      )
+      .all();
+  }
+  updateStatus(id, status) {
+    return db
+      .prepare(
+        `
+      UPDATE ${this.table} SET status = ? WHERE id = ?
+      `,
+      )
+      .run(status, id);
+  }
+
+  create({ userId, roomId, dateStart, payment }) {
+    const r = db
+      .prepare(
+        `
+    INSERT INTO ${this.table} (user_id, room_id, date_start, payment)
+    VALUES (?, ?, ?, ?)
+    `,
+      )
+      .run(userId, roomId, dateStart, payment);
+    return this.findById(r.lastInsertRowid);
+  }
+}
+
+export const User = new UserModel();
+export const Room = new RoomModel();
+export const Requests = new RequestsModel();
 
 export default db;

@@ -1,167 +1,226 @@
-// import express from "express";
-// const app = express();
-// const PORT = 3000;
-
-// app.use(express.urlencoded({ extended: true }));
-
-// app.get("/", (req, res) => {
-//     res.send(`
-//         <h1>Добро пожаловать на Конференции.РФ</h1>
-//         <p>Выберите нужный раздел в меню:</p>
-//         <ul>
-//             <li><a href="/about">О портале</a></li>
-//             <li><a href="/contact">Контакты</a></li>
-//             <li><a href="/help">Помощь</a></li>
-//             <li><a href="/rooms">Список помещений</a></li>
-//             <li><a href="/register">Регистрация</a></li>
-//         </ul>
-//     `);
-// });
-
-// app.get('/about', (req, res) => {
-//     res.send(`
-//         <h1>О портале</h1>
-//         <p><b>Конференции.РФ</b> — это современная площадка для организации и проведения научных и бизнес-мероприятий.</p>
-//         <a href="/">На главную</a
-//     `);
-// });
-
-// app.get('/contact', (req, res) => {
-//     res.send(`
-//         <h1>Контакты</h1>
-//         <p>По всем вопросам пишите нам на email: <a href="mailto:support@conf.rf">support@conf.rf</a></p>
-//         <p>Телефон горячей линии: <b>+7 (000) 000-00-00</b></p>
-//         <a href="/">На главную</a>
-//     `);
-// });
-
-// app.get('/help', (req, res) => {
-//     res.send(`
-//         <h1>Помощь и FAQ</h1>
-//         <h3>Как зарегистрироваться?</h3>
-//         <p>Перейдите в раздел <a href="/register">Регистрация</a> и заполните форму.</p>
-//         <a href="/">На главную</a>
-//     `);
-// });
-
-// app.get('/rooms', (req, res) => {
-//     res.send(`
-//         <h1>Список помещений</h1>
-//         <p>Доступные залы для проведения мероприятий:</p>
-//         <ol>
-//             <li><b>Большой актовый зал</b> (до 500 человек)</li>
-//             <li><b>Конференц-зал "Альфа"</b> (до 100 человек)</li>
-//             <li><b>Пресс-центр "Омега"</b> (до 50 человек)</li>
-//             <li><b>Круглый стол</b> (до 25 человек)</li>
-//         </ol>
-//         <a href="/">На главную</a>
-//     `);
-// });
-
-// app.get('/register', (req, res) => {
-//     res.send(`
-//         <h2>Регистрация на портале</h2>
-//         <form method="POST" action="/register">
-//             <p><input name="login" placeholder="Логин" required></p>
-//             <p><input name="password" type="password" placeholder="Пароль" required></p>
-//             <p><input name="fio" placeholder="ФИО" required></p>
-//             <p><input name="phone" type="tel" placeholder="Телефон" required></p>
-//             <p><input name="email" type="email" placeholder="Email" required></p>
-//             <p><input name="city" type="city" placeholder="Город" required></p>
-//             <button type="submit">Создать пользователя</button>
-//             <button type="reset">Очистить форму</button>
-//         </form>
-//     `);
-// });
-
-// app.post('/register', (req, res) => {
-//     const { login, password, fio, phone, email, city } = req.body;
-
-//     res.send(`
-//         <h2>Успешная регистрация!</h2>
-//         <p><b>Логин:</b> ${login}</p>
-//         <p><b>Пароль:</b> ${password}</p>
-//         <p><b>ФИО:</b> ${fio}</p>
-//         <p><b>Телефон:</b> ${phone}</p>
-//         <p><b>Email:</b> ${email}</p>
-//         <p><b>Город:</b>${city}</p>
-//         <br>
-//         <a href="/register">Назад к форме</a>
-//     `);
-// });
-
-// app.listen(PORT, () => {
-//     console.log(`Сервер запущен: http://localhost:${PORT}`);
-// });
 import express from "express";
+import session from "express-session";
+import bcrypt from "bcryptjs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
-import db from "./db.js";
-import { User } from "./db.js";
 
-const users = db.prepare("SELECT * FROM users").all();
-const rooms = db.prepare("SELECT * FROM rooms").all();
-const requests = db.prepare("SELECT * FROM requests").all();
-const userModel = new User(); 
+import { User, Room, Requests } from "./db.js";
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = 3000;
 
-app.use(express.static("public"));
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static(join(__dirname, "public")));
 
 app.set("view engine", "ejs");
 app.set("views", join(__dirname, "views"));
 
-app.get("/index", (req, res) => {
-  res.render("index");
+app.use(
+  session({
+    secret: "conf2027-secret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 2,
+      httpOnly: true,
+      sameSite: "lax",
+    },
+  }),
+);
+
+// Передача сессии во все шаблоны
+app.use((req, res, next) => {
+  res.locals.session = req.session;
+  next();
 });
 
-app.get("/about", (req, res) => {
-  res.render("about", {
-    title: "О портале Конференции.РФ",
-    description:
-      "Это современный образовательный и научный портал для проведения мероприятий.",
-  });
+const INACTIVITY_LIMIT = 20 * 60 * 1000;
+
+// ИСПРАВЛЕНО: Добавлен обязательный вызов next() в случае уничтожения сессии
+app.use((req, res, next) => {
+  if (req.session && req.session.userId) {
+    const now = Date.now();
+
+    if (
+      req.session.lastActivity &&
+      now - req.session.lastActivity > INACTIVITY_LIMIT
+    ) {
+      return req.session.destroy(() => res.redirect("/login"));
+    }
+
+    req.session.lastActivity = now;
+  }
+  next();
+});
+
+const requireAuth = (req, res, next) =>
+  req.session.userId ? next() : res.redirect("/login");
+
+const requireAdmin = (req, res, next) =>
+  req.session.login === "Conf2027" ? next() : res.redirect("/login");
+
+const RULES = [
+  {
+    field: "login",
+    test: (v) => /^[A-Za-z0-9]{6,}$/.test(v),
+    msg: "Логин: латиница+цифры, минимум 6 символов",
+  },
+  {
+    field: "password",
+    test: (v) => v && v.length >= 8,
+    msg: "Пароль: минимум 8 символов",
+  },
+  {
+    field: "fio",
+    test: (v) => /^[А-Яа-яЁё\s]+$/.test(v),
+    msg: "ФИО: только кириллица и пробелы",
+  },
+  {
+    field: "phone",
+    test: (v) => /^8\(\d{3}\)\d{3}-\d{2}-\d{2}$/.test(v),
+    msg: "Телефон: формат 8(ХХХ)ХХХ-ХХ-ХХ",
+  },
+  {
+    field: "email",
+    test: (v) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v),
+    msg: "Email: некорректный формат",
+  },
+];
+
+const validate = (data) =>
+  RULES.filter(({ field, test }) => !test((data[field] || "").trim())).map(
+    (r) => r.msg,
+  );
+
+app.get("/", (req, res) => {
+  res.redirect("/login");
 });
 
 app.get("/register", (req, res) => {
-  res.render("register");
-});
-
-app.post("/register", (req, res) => {
-  const { login, password, fio, phone, email, city } = req.body;
-  res.render("register", { user: { login, fio, phone, email, city } });
-});
-
-app.get("/login", (req, res) => {
-  res.render("login");
-});
-
-app.post("/login", (req, res) => {
-  res.redirect("/dashboard");
-});
-
-app.get("/dashboard", (req, res) => {
-  res.render("dashboard", {
-    title: "Мои заявки",
-    user: { fio: "Иванов Иван" },
-    requests: [
-      { room_name: "Аудитория №1", status: "Новая" },
-      { room_name: "Коворкинг", status: "Завершено" },
-    ],
+  res.render("auth", {
+    mode: "register",
+    form: {},
+    errors: [],
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Сервер запущен: http://localhost:${PORT}`);
+// ИСПРАВЛЕНО: Безопасное хеширование пароля перед сохранением
+app.post("/register", (req, res) => {
+  const errors = validate(req.body);
+
+  if (User.exists(req.body.login)) {
+    errors.push("Логин уже занят");
+  }
+
+  if (errors.length) {
+    return res.render("auth", {
+      mode: "register",
+      form: req.body,
+      errors,
+    });
+  }
+
+  // Создаем копию данных и хешируем пароль перед записью в БД
+  const userData = { ...req.body };
+  userData.password = bcrypt.hashSync(userData.password, 10);
+
+  User.create(userData);
+
+  req.session.flash = {
+    type: "success",
+    text: "Регистрация успешна. Войдите.",
+  };
+
+  res.redirect("/login");
 });
 
-console.log(users);
-console.log(rooms);
-console.log(requests);
+app.get("/login", (req, res) => {
+  const flash = req.session.flash || null;
+  delete req.session.flash;
 
-console.log("Все пользователи:", userModel.findAll());
-console.log("Всего пользователей:", userModel.count());
-console.log("Существует ли ivan?:", userModel.exists("ivan"));
-console.log("Существует ли programmer?:", userModel.exists("programmer"));
+  res.render("auth", {
+    mode: "login",
+    error: null,
+    flash,
+  });
+});
+
+app.post("/login", (req, res) => {
+  const user = User.findByLogin(req.body.login);
+
+  if (user && bcrypt.compareSync(req.body.password, user.password)) {
+    req.session.userId = user.id;
+    req.session.fio = user.fio;
+    req.session.login = user.login;
+    req.session.lastActivity = Date.now();
+
+    return res.redirect(user.login === "Conf2027" ? "/admin" : "/dashboard");
+  }
+
+  res.render("auth", {
+    mode: "login",
+    error: "Неверный логин или пароль",
+    flash: null,
+  });
+});
+
+app.all("/logout", (req, res) => {
+  req.session.destroy(() => res.redirect("/login"));
+});
+
+app.get("/dashboard", requireAuth, (req, res) => {
+  const requests = Requests.findByUser(req.session.userId);
+  res.render("requests_list", { isAdmin: false, requests });
+});
+
+app
+  .route("/create")
+  .get(requireAuth, (req, res) => {
+    const rooms = Room.findAll();
+    res.render("create_request", { rooms, errors: [] });
+  })
+  .post(requireAuth, (req, res) => {
+    const { room_id, date_start, payment } = req.body;
+
+    if (!room_id || !date_start || !payment) {
+      const rooms = Room.findAll();
+      return res.render("create_request", {
+        rooms,
+        errors: ["Все поля обязательны для заполнения"],
+      });
+    }
+
+    Requests.create({
+      userId: req.session.userId,
+      roomId: room_id,
+      dateStart: date_start,
+      payment: payment,
+    });
+
+    res.redirect("/dashboard");
+  });
+
+app.get("/admin", requireAdmin, (req, res) => {
+  const requests = Requests.findAllDetailed();
+  res.render("requests_list", { isAdmin: true, requests });
+});
+
+app.post("/admin", requireAdmin, (req, res) => {
+  Requests.updateStatus(req.body.id, req.body.status);
+  res.redirect("/admin");
+});
+
+app.get("/rooms", (req, res) => {
+  const rooms = Room.findAll();
+  res.render("rooms", { rooms });
+});
+
+app.get("/rooms/type/:type", (req, res) => {
+  const rooms = Room.findAll().filter((r) => r.type === req.params.type);
+  res.render("rooms", { rooms });
+});
+
+app.listen(PORT, () => {
+  console.log(`Сервер: http://localhost:${PORT}`);
+});
