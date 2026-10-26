@@ -94,7 +94,7 @@ const validate = (data) =>
   );
 
 app.get("/", (req, res) => {
-  res.redirect("/login");
+  res.render("index");
 });
 
 app.get("/register", (req, res) => {
@@ -219,6 +219,45 @@ app.get("/rooms", (req, res) => {
 app.get("/rooms/type/:type", (req, res) => {
   const rooms = Room.findAll().filter((r) => r.type === req.params.type);
   res.render("rooms", { rooms });
+});
+
+app.get("/request/:id", requireAuth, (req, res) => {
+  const request = Requests.findDetailed(req.params.id);
+
+  if (!request) {
+    return res.status(404).send("Заявка не найдена");
+  }
+
+  const isOwner = request.user_id === req.session.userId;
+  const isAdmin = req.session.login === "Conf2027";
+
+  if (!isOwner && !isAdmin) {
+    return res.status(403).send("Доступ запрещён");
+  }
+
+  res.render("request_detail", {
+    request,
+    isOwner,
+    isAdmin,
+  });
+});
+
+app.post("/review/:id", requireAuth, (req, res) => {
+  const request = Requests.findDetailed(req.params.id);
+
+  if (!request) {
+    return res.status(404).send("Заявка не найдена");
+  }
+
+  if (request.user_id !== req.session.userId) {
+    return res.status(403).send("Только владелец может оставить отзыв");
+  }
+
+  const review = (req.body.review || "").trim();
+
+  Requests.addReview(request.id, req.session.userId, review);
+
+  res.redirect(`/request/${request.id}`);
 });
 
 app.listen(PORT, () => {

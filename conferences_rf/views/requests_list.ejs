@@ -4,7 +4,7 @@
   <h2 class="mb-0">
     <%= isAdmin ? 'Панель администратора' : 'Мои заявки' %> (<%= requests.length %>)
   </h2>
-  <% if (isAdmin){ %>
+  <% if (!isAdmin){ %>
     <a href="/create" class="btn btn-success">+ Новая заявка</a>
   <% } %>
 </div>
@@ -22,7 +22,9 @@
         <div class="card-body">
           
           <div class="d-flex justify-content-between align-items-start">
-            <h5 class="card-title mb-1"><%= r.room_name %></h5>
+            <h5 class="card-title mb-1">
+              <a href="/request/<%= r.id %>" class="text-decoration-none"><%= r.room_name %></a>
+            </h5>
             <span class="badge bg-<%= r.status === 'Новая' ? 'secondary' : (r.status === 'Мероприятие назначено' ? 'primary' : 'success') %>">
               <%= r.status %>
             </span>

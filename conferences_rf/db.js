@@ -225,6 +225,33 @@ class RequestsModel {
       .run(userId, roomId, dateStart, payment);
     return this.findById(r.lastInsertRowid);
   }
+
+  findDetailed(id) {
+    return db.prepare(`
+      SELECT r.*,
+            u.fio AS user_fio,
+            u.login AS user_login,
+            u.email AS user_email,
+            u.phone AS user_phone,
+            rm.name AS room_name,
+            rm.type AS room_type,
+            rm.capacity AS room_capacity
+      FROM ${this.table} r
+      JOIN users u ON u.id = r.user_id
+      JOIN rooms rm ON rm.id = r.room_id
+      WHERE r.id = ?
+    `).get(id);
+  }
+
+  addReview(id, userId, review) {
+    if (!review || !review.trim()) return false;
+    const r = db.prepare(`
+      UPDATE ${this.table}
+      SET review = ?
+      WHERE id = ? AND user_id = ? AND status = 'Завершено'
+    `).run(review.trim(), id, userId);
+    return r.changes > 0;
+  }
 }
 
 export const User = new UserModel();
