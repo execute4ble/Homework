@@ -1,0 +1,43 @@
+<%- include('header') %>
+
+<div class="p-5 mb-4 bg-light rounded-3 border mt-3">
+  <div class="container-fluid py-5 text-center">
+    <h1 class="display-5 fw-bold text-primary">Конференции.РФ</h1>
+    <p class="col-md-8 mx-auto fs-4 text-muted">
+      Удобная платформа для бронирования залов, аудиторий и помещений под ваши научные, образовательные и бизнес-мероприятия.
+    </p>
+    
+    <div class="d-flex justify-content-center gap-3 mt-4">
+      <% if (session && session.userId) { %>
+        <a href="/dashboard" class="btn btn-primary btn-lg px-4">Мой кабинет</a>
+        <a href="/rooms" class="btn btn-outline-secondary btn-lg px-4">Смотреть залы</a>
+      <% } else { %>
+        <a href="/login" class="btn btn-primary btn-lg px-4">Войти в систему</a>
+        <a href="/register" class="btn btn-outline-primary btn-lg px-4">Регистрация</a>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-5 text-center">
+  <div class="col-md-4">
+    <div class="p-3 border rounded bg-white shadow-sm h-100">
+      <h3 class="h5 text-secondary">🥇 Простые заявки</h3>
+      <p class="mb-0 text-muted small">Оформление бронирования в три клика прямо из личного кабинета.</p>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="p-3 border rounded bg-white shadow-sm h-100">
+      <h3 class="h5 text-secondary">👥 Разные типы залов</h3>
+      <p class="mb-0 text-muted small">От небольших переговорных до огромных лекционных аудиторий.</p>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="p-3 border rounded bg-white shadow-sm h-100">
+      <h3 class="h5 text-secondary">💬 Обратная связь</h3>
+      <p class="mb-0 text-muted small">Возможность оставлять отзывы о качестве проведённых мероприятий.</p>
+    </div>
+  </div>
+</div>
+
+<%- include('footer') %>

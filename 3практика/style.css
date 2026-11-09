@@ -1,0 +1,103 @@
+body {
+    background-color: #f4f6fb;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+}
+
+.navbar-brand {
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+.table-card {
+    border: none;
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.table-card .card-header {
+    background: #fff;
+    border-bottom: 1px solid #eef0f5;
+    padding: 18px 22px;
+}
+
+.table-card .card-header h5 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.applications-table {
+    margin-bottom: 0;
+}
+
+.applications-table thead th {
+    background-color: #f8f9fc;
+    font-weight: 600;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #6c757d;
+    border-bottom: 2px solid #e9ecef;
+    white-space: nowrap;
+}
+
+.applications-table tbody tr {
+    vertical-align: middle;
+}
+
+.applications-table tbody td {
+    padding: 12px 14px;
+}
+
+.badge {
+    font-weight: 500;
+    padding: 0.45em 0.8em;
+    font-size: 0.78rem;
+}
+
+.status-select {
+    min-width: 200px;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.nav-pills .nav-link .counter-badge {
+    margin-left: 6px;
+    font-size: 0.75rem;
+}
+
+.pagination .page-link {
+    cursor: pointer;
+    border-radius: 8px !important;
+    margin: 0 2px;
+    border: 1px solid #e3e6ef;
+}
+
+.pagination .page-item.active .page-link {
+    background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
+    border-color: transparent;
+}
+
+.toast-container {
+    z-index: 1090;
+}
+
+@keyframes rowFlash {
+    0%   { background-color: #d1e7dd; }
+    100% { background-color: transparent; }
+}
+
+.row-flash {
+    animation: rowFlash 1.2s ease-out;
+}
+
+@media (max-width: 768px) {
+    .table-card .card-header {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 10px;
+    }
+    .status-select {
+        min-width: 100%;
+    }
+}
